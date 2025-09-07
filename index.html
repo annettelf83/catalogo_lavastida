@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lavastida · Micropanadería Artesanal</title>
+
+  <!-- Tipografía secundaria -->
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root{
+      --rojo:#8F1C13;
+      --moka:#513933;
+      --hueso:#E8E3DD;
+      --blanco:#FFFFFF;
+      --borde: color-mix(in oklab, var(--moka) 22%, var(--hueso));
+      --sombra: 0 10px 30px rgba(0,0,0,.08);
+      --radio:16px;
+    }
+
+    /* Fuente de marca */
+    @font-face{
+      font-family:"Pricedown Black";
+      src: url("Pricedown-Black.otf") format("opentype"),
+           url("pricedown bl.otf") format("opentype");
+      font-weight:900; font-style:normal; font-display:swap;
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0}
+    /* Fondo con patrón (patron-fondo.jpeg) */
+    body{
+      font-family:"Lexend", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--moka);
+      background-color: var(--hueso);
+      background-image:
+        linear-gradient(rgba(255,255,255,.9), rgba(255,255,255,.9)),
+        url("patron-fondo.jpeg");
+      background-repeat: repeat;
+      background-size: 280px auto;
+      background-attachment: fixed;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    .wrap{max-width:1160px; margin:auto; padding:0 16px}
+
+    /* ===== Top App Bar ===== */
+    .appbar{
+      position:sticky; top:0; z-index:20; background:var(--blanco);
+      border-bottom:4px solid var(--rojo);
+    }
+    .appbar .row{
+      display:grid; grid-template-columns:auto 1fr auto; gap:12px; align-items:center;
+      padding:10px 12px;
+    }
+    .brand{display:flex; align-items:center; gap:10px}
+    .brand img{height:40px; width:auto; object-fit:contain; border-radius:8px}
+    .brand-title{
+      margin:0; line-height:1;
+      font-family:"Pricedown Black","Lexend",sans-serif;
+      font-size:26px; color:var(--rojo);
+    }
+    .brand-sub{font-size:12px; opacity:.9; margin-top:2px}
+
+    .search{
+      display:flex; align-items:center; gap:10px; background:#fff;
+      border:1px solid var(--borde); border-radius:999px; padding:8px 12px;
+    }
+    .search svg{width:18px; height:18px; opacity:.6}
+    #q{border:0; outline:0; flex:1; font-size:14px; background:transparent}
+
+    .actions{display:flex; gap:8px; align-items:center}
+    .chip{
+      display:inline-flex; align-items:center; gap:6px; padding:8px 12px;
+      border:1px solid var(--borde); border-radius:999px; background:#fff; font-weight:700;
+    }
+
+    /* ===== Filtros ===== */
+    .filters{display:flex; gap:10px; flex-wrap:wrap; padding:12px 0}
+    .filters button{
+      border:1px solid var(--borde); background:#fff; color:var(--moka);
+      padding:8px 12px; border-radius:999px; font-weight:800; cursor:pointer;
+    }
+    .filters button.active{background:var(--rojo); color:#fff; border-color:var(--rojo)}
+
+    /* ===== Grid de productos ===== */
+    .grid{
+      display:grid; gap:18px; padding-bottom:28px;
+      grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));
+    }
+    .card{
+      background:#fff; border:1px solid var(--borde); border-radius:var(--radio); overflow:hidden;
+      display:flex; flex-direction:column; box-shadow:var(--sombra); transition:.25s transform ease;
+    }
+    .card:hover{transform:translateY(-3px)}
+
+    /* Opción 2: contener (sin recortes) */
+    .thumb{
+      aspect-ratio:4/3;
+      background:color-mix(in oklab, var(--rojo) 12%, var(--hueso));
+      display:flex; align-items:center; justify-content:center; overflow:hidden;
+    }
+    .thumb img{
+      max-width:100%; max-height:100%;
+      object-fit:contain; display:block;
+    }
+
+    .body{padding:14px 14px 8px}
+    .title{margin:0; font-size:18px; font-weight:800; color:var(--moka)}
+    .badge{display:inline-block; margin-top:6px; font-size:12px; font-weight:700; color:var(--rojo)}
+    .price{margin-top:8px; font-weight:900; color:var(--rojo); font-size:16px}
+    .cta{display:flex; gap:10px; padding:12px 14px 16px}
+    .btn{
+      flex:1; text-decoration:none; text-align:center; border-radius:10px; padding:10px 12px;
+      font-weight:800; border:1px solid var(--rojo); color:var(--rojo); background:#fff;
+    }
+    .btn.fill{background:var(--rojo); color:#fff}
+
+    /* FAB WhatsApp */
+    .wa-fab{
+      position:fixed; right:16px; bottom:16px; z-index:40;
+      width:58px; height:58px; border-radius:50%; display:grid; place-items:center;
+      background:#25D366; color:#fff; text-decoration:none; box-shadow:0 10px 24px rgba(0,0,0,.18);
+      font-size:26px;
+    }
+
+    /* Footer */
+    footer{background:#fff; border-top:4px solid var(--rojo)}
+    .foot{display:grid; grid-template-columns:1fr auto; gap:16px; align-items:center; padding:16px}
+    .foot small{opacity:.9}
+    .social{display:flex; gap:14px}
+    .social a svg{width:22px; height:22px; fill:var(--moka)}
+    .social a:hover svg{fill:var(--rojo)}
+    .copy{text-align:center; font-size:12px; padding:10px; border-top:1px dashed #eee}
+
+    @media (max-width:720px){
+      .foot{grid-template-columns:1fr}
+      .brand img{height:34px}
+      .brand-title{font-size:22px}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== TOP BAR ===== -->
+  <div class="appbar">
+    <div class="wrap row">
+      <div class="brand">
+        <!-- LOGO en .jpeg -->
+        <img src="lavastida_logo.jpeg" alt="Lavastida" />
+        <div>
+          <h1 class="brand-title">LAVASTIDA</h1>
+          <div class="brand-sub">Micropanadería Artesanal</div>
+        </div>
+      </div>
+
+      <label class="search" aria-label="Buscar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.8l-.3-.3A6.5 6.5 0 1014 15.5l.3.3v.8L20 21.5 21.5 20l-6-6zM10.5 15A4.5 4.5 0 1115 10.5 4.5 4.5 0 0110.5 15z"/></svg>
+        <input id="q" type="search" placeholder="Buscar productos…" />
+      </label>
+
+      <div class="actions">
+        <div class="chip">CUP ▾</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CATÁLOGO ===== -->
+  <main class="wrap" style="padding:12px 0 4px">
+    <div class="filters" id="filtros">
+      <button class="active" data-filter="todas">Todas</button>
+      <button data-filter="pan">Panes</button>
+      <button data-filter="dulce">Dulces</button>
+      <button data-filter="especial">Especiales</button>
+    </div>
+
+    <!-- contenedor del grid -->
+    <div id="grid" class="grid"></div>
+
+    <p style="margin:6px 0 18px;opacity:.75;font-size:13px">* Precios en CUP; orientativos según peso/harina disponible.</p>
+  </main>
+
+  <!-- FAB WhatsApp -->
+  <a class="wa-fab" href="https://wa.me/5355427887?text=Hola%20Lavastida%2C%20quiero%20hacer%20un%20pedido" target="_blank" aria-label="WhatsApp">🟢</a>
+
+  <!-- ===== FOOTER ===== -->
+  <footer>
+    <div class="wrap foot">
+      <small><strong>Horario & Encargos:</strong> Lun–Mié-Jue-Vie, 9:00–19:00 (encargos con 1 día de antelación).<br>
+      Dirección: 5ta A #6211, e/62 y 64, La Habana, Playa, Miramar.</small>
+
+      <div class="social" aria-label="Redes sociales">
+        <!-- Instagram -->
+        <a href="https://instagram.com/panaderia_lavastida" target="_blank" title="Instagram" aria-label="Instagram">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 2h10a5 5 0 015 5v10a5 5 0 01-5 5H7a5 5 0 01-5-5V7a5 5 0 015-5zm10 2H7a3 3 0 00-3 3v10a3 3 0 003 3h10a3 3 0 003-3V7a3 3 0 00-3-3zm-5 3.5A5.5 5.5 0 1112 17a5.5 5.5 0 010-11zm0 2A3.5 3.5 0 1015.5 12 3.5 3.5 0 0012 7.5zm4.8-2.3a1.3 1.3 0 11-2.6 0 1.3 1.3 0 012.6 0z"/></svg>
+        </a>
+        <!-- Facebook -->
+        <a href="https://www.facebook.com/share/19KFP6AqJJ/?mibextid=wwXIfr" target="_blank" title="Facebook" aria-label="Facebook">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22 12a10 10 0 10-11.6 9.9v-7h-2v-3h2v-2.3c0-2 1.2-3.2 3-3.2.9 0 1.8.2 1.8.2v2h-1c-1 0-1.4.6-1.4 1.3V12h2.5l-.4 3h-2v7A10 10 0 0022 12z"/></svg>
+        </a>
+        <!-- WhatsApp -->
+        <a href="https://wa.me/5355427887" target="_blank" title="WhatsApp" aria-label="WhatsApp">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.5 3.5A11.8 11.8 0 0012 0 12 12 0 001 18.4L0 24l5.7-1.5A12 12 0 1020.5 3.5zM12 21a9 9 0 01-4.6-1.2l-.3-.2-3.4.9.9-3.3-.2-.3A9 9 0 1121 12a9 9 0 01-9 9z"/></svg>
+        </a>
+      </div>
+    </div>
+    <div class="copy">© <span id="y"></span> Annette Lavastida</div>
+  </footer>
+
+  <!-- ===== SCRIPT: catálogo + búsqueda + filtros ===== -->
+  <script>
+    // Catálogo
+    const catalogo = [
+      // Especiales
+      { nombre:'Bagel con toppings',        precio:'CUP 400',  categoria:'especial', img:'bagel-toppings.jpeg' },
+      { nombre:'Bagel plain',               precio:'CUP 350',  categoria:'especial', img:'bagel-plain.jpeg' },
+
+      // Dulces
+      { nombre:'Babka (chocolate o canela)',  precio:'CUP 1,500', categoria:'dulce',   img:'babka.jpeg' },
+      { nombre:'Cinnamon Roll',             precio:'CUP 360',   categoria:'dulce',   img:'cinnamon.jpeg' },
+
+      // Panes (precios)
+      { nombre:'Baguette 150g',             precio:'CUP 250', categoria:'pan', img:'baguette150.jpeg' },
+      { nombre:'Baguette 300g',             precio:'CUP 500', categoria:'pan', img:'baguette300.jpeg' },
+      { nombre:'Baguette 500g',             precio:'CUP 700', categoria:'pan', img:'baguette500.jpeg' },
+      { nombre:'Bun Brioche 50g',           precio:'CUP 100', categoria:'pan', img:'brioche50.jpeg' },
+      { nombre:'Bun Brioche 90g',           precio:'CUP 200', categoria:'pan', img:'brioche90.jpeg' },
+      { nombre:'Bun Brioche 120g',          precio:'CUP 280', categoria:'pan', img:'brioche120.jpeg' },
+      { nombre:'Challah 400g',              precio:'CUP 750', categoria:'pan', img:'challah400.jpeg' },
+      { nombre:'Challah 500g',              precio:'CUP 800', categoria:'pan', img:'challah500.jpeg' },
+      { nombre:'Challah 600g',              precio:'CUP 1,100', categoria:'pan', img:'challah600.jpeg' },
+      { nombre:'Ciabatta 150g',             precio:'CUP 200', categoria:'pan', img:'ciabatta150.jpeg' },
+      { nombre:'Ciabatta 300g',             precio:'CUP 450', categoria:'pan', img:'ciabatta300.jpeg' },
+      { nombre:'Focaccia 400g',             precio:'CUP 480', categoria:'pan', img:'focaccia400.jpeg' },
+      { nombre:'Hogaza rústica 300g',       precio:'CUP 400', categoria:'pan', img:'hogaza300.jpeg' },
+      { nombre:'Hogaza rústica 500g',       precio:'CUP 700', categoria:'pan', img:'hogaza500.jpeg' },
+      { nombre:'Hogaza rústica 800g',       precio:'CUP 1,000', categoria:'pan', img:'hogaza800.jpeg' },
+      { nombre:'Molde Brioche',             precio:'CUP 700', categoria:'pan', img:'moldebrioche.jpeg' },
+    ];
+
+    // Orden alfabético (español + números)
+    const productos = catalogo.sort((a,b)=> a.nombre.localeCompare(b.nombre,'es',{numeric:true,sensitivity:'base'}));
+
+    // Elementos UI
+    const grid = document.getElementById('grid');
+    const q = document.getElementById('q');
+    const filtros = document.querySelectorAll('#filtros button');
+
+    // Tarjeta
+    function card(p){
+      const imgTag = p.img ? `<img src="${p.img}" alt="${p.nombre}" onerror="this.style.display='none'">` : '';
+      const wa = encodeURIComponent(`Hola Lavastida, quiero encargar: ${p.nombre} (${p.precio}).`);
+      return `
+        <article class="card" data-cat="${p.categoria}">
+          <div class="thumb">${imgTag}</div>
+          <div class="body">
+            <h3 class="title">${p.nombre}</h3>
+            <span class="badge">${p.categoria}</span>
+            <div class="price">${p.precio}</div>
+          </div>
+          <div class="cta">
+            <a class="btn" href="mailto:pedidos@lavastida.cu?subject=Pedido: ${encodeURIComponent(p.nombre)}&body=${wa}">Correo</a>
+            <a class="btn fill" href="https://wa.me/5355427887?text=${wa}" target="_blank" rel="noopener">WhatsApp</a>
+          </div>
+        </article>`;
+    }
+
+    // Render
+    function render(filtro='todas', texto=''){
+      const term = texto.trim().toLowerCase();
+      grid.innerHTML = productos
+        .filter(p => filtro==='todas' ? true : p.categoria===filtro)
+        .filter(p => term ? p.nombre.toLowerCase().includes(term) : true)
+        .map(card).join('');
+    }
+
+    // Filtros
+    filtros.forEach(b=>{
+      b.addEventListener('click', ()=>{
+        filtros.forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+        render(b.dataset.filter, q.value);
+      });
+    });
+
+    // Búsqueda
+    q.addEventListener('input', ()=>{
+      const activo = document.querySelector('#filtros .active')?.dataset.filter || 'todas';
+      render(activo, q.value);
+    });
+
+    // Inicio
+    render();
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
