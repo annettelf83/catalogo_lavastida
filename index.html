@@ -23,10 +23,13 @@
 
     /* Fuente de marca */
     @font-face{
-      font-family:"Pricedown Black";
-      src: url("Pricedown-Black.otf") format("opentype"),
-      font-weight:900; font-style:normal; font-display:swap;
-    }
+  font-family:"Pricedown Black";
+  src: url("Pricedown-Black.otf") format("opentype"),
+       url("pricedown bl.otf") format("opentype");
+  font-weight:900; 
+  font-style:normal; 
+  font-display:swap;
+}
 
     *{box-sizing:border-box}
     html,body{margin:0}
@@ -170,6 +173,25 @@
       .brand img{height:34px}
       .brand-title{font-size:22px}
       .drawer .panel{width:100%}
+
+       /* responsiveness */
+       /* ===== Mobile: que la foto llene el ancho sin franjas ===== */
+@media (max-width: 480px){
+  /* hacemos la tarjeta un poco más compacta */
+  .grid{ grid-template-columns: 1fr; gap: 14px; }
+
+  /* forzamos un alto agradable y llenamos el ancho */
+  .thumb{
+    aspect-ratio: 3 / 2;         /* un poco más apaisado */
+    overflow: hidden;            /* por si recorta, que no desborde */
+  }
+  .thumb img{
+    width: 100%;
+    height: 100%;
+    object-fit: contain;           /* llena el ancho; puede recortar un poco */
+  }
+}
+
     }
   </style>
 </head>
