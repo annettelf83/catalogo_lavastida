@@ -8,7 +8,7 @@
   <!-- Tipografía secundaria -->
   <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&display=swap" rel="stylesheet"/>
 
-  <style>
+  <style> /* CSS */
     :root{
       --rojo:#8F1C13;
       --moka:#513933;
@@ -145,6 +145,16 @@
       background:#fff; display:flex; flex-direction:column; box-shadow:-20px 0 40px rgba(0,0,0,.2);
       border-left:3px solid var(--rojo);
     }
+    /* botón cerrar dentro del carrito */
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+  color: var(--moka);
+}
+.close-btn:hover { color: var(--rojo); }
     .panel header{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px; border-bottom:1px solid var(--borde)}
     .panel h3{margin:0; font-size:18px}
     .cart-list{flex:1; overflow:auto; padding:12px}
@@ -173,29 +183,39 @@
       .brand img{height:34px}
       .brand-title{font-size:22px}
       .drawer .panel{width:100%}
-
+    }
+    
        /* responsiveness */
-       /* ===== Mobile: que la foto llene el ancho sin franjas ===== */
-@media (max-width: 480px){
-  /* hacemos la tarjeta un poco más compacta */
-  .grid{ grid-template-columns: 1fr; gap: 14px; }
+       /* Botón carrito ya en tu HTML: solo afinamos tamaños en móvil */
+.appbar .row{ overflow: visible; } /* que no recorte el badge */
 
-  /* forzamos un alto agradable y llenamos el ancho */
-  .thumb{
-    aspect-ratio: 3 / 2;         /* un poco más apaisado */
-    overflow: hidden;            /* por si recorta, que no desborde */
-  }
-  .thumb img{
-    width: 100%;
-    height: 100%;
-    object-fit: contain;           /* llena el ancho; puede recortar un poco */
-  }
+.cart-btn{
+  position: relative;
+  width: 44px; height: 44px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: #fff; border: 1px solid var(--borde);
+  box-shadow: var(--sombra); cursor: pointer;
+}
+.cart-btn svg{ width: 22px; height: 22px; fill: var(--moka); }
+.cart-badge{
+  position: absolute; top: -6px; right: -6px;
+  background: var(--rojo); color: #fff; font-weight: 800;
+  font-size: 12px; line-height: 1; padding: 3px 6px; border-radius: 999px;
 }
 
-    }
+/* En pantallas pequeñas, todo un pelín más compacto */
+@media (max-width: 480px){
+  .appbar .row{ grid-template-columns: auto 1fr auto; gap: 8px; padding: 8px; }
+  .brand img{ height: 32px; }
+  .brand-title{ font-size: 20px; }
+  .chip{ padding: 6px 8px; }
+  .cart-btn{ width: 40px; height: 40px; }
+  .cart-btn svg{ width: 20px; height: 20px; }
+}    
+
   </style>
 </head>
-<body>
+<body> <!-- ===== HTML ===== -->
 
   <!-- ===== TOP BAR ===== -->
   <div class="appbar">
@@ -222,8 +242,26 @@
           <span class="cart-badge" id="cartCount">0</span>
         </button>
       </div>
+      <div class="drawer" id="drawer" aria-hidden="true">
+        <div class="backdrop"></div>
+        <div class="panel">
+          <header>
+            <h3>Tu pedido</h3>
+            <button id="closeCart" class="close-btn" aria-label="Cerrar carrito">×</button>
+          </header>
+          <div class="cart-list" id="cartList"></div>
+          <div class="total">
+            <span>Total</span>
+            <span id="cartTotal">CUP 0</span>
+          </div>
+          <div class="wa">
+            <a id="sendWA" href="#" target="_blank">Enviar por WhatsApp</a>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
+
 
   <!-- ===== CATÁLOGO ===== -->
   <main class="wrap" style="padding:12px 0 4px">
@@ -246,6 +284,7 @@
     <div class="panel" role="dialog" aria-modal="true" aria-labelledby="cartTitle">
       <header>
         <h3 id="cartTitle">Tu pedido</h3>
+        <button id="closeCart" aria-label="Cerrar carrito">✖</button>
         <button class="btn" id="clearCart" type="button">Vaciar</button>
       </header>
       <div class="cart-list" id="cartList"></div>
@@ -284,7 +323,7 @@
     <div class="copy">© <span id="y"></span> Annette Lavastida</div>
   </footer>
 
-  <!-- ===== SCRIPT: catálogo + búsqueda + filtros + carrito (con memoria) ===== -->
+  <!-- ===== JAVASCRIPT: catálogo + búsqueda + filtros + carrito (con memoria) ===== -->
   <script>
     // Catálogo
     const catalogo = [
@@ -338,6 +377,20 @@
 
     const priceToNumber = p => Number(p.replace(/[^\d]/g,''));
     const fmt = n => 'CUP ' + n.toLocaleString('es-ES');
+
+    // Botón cerrar carrito
+    closeCart.addEventListener('click', () => {
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden','true');
+    });
+
+    // También cerrar con tecla Escape
+    document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden','true');
+     }
+    });  
 
     // ====== Persistencia ======
     function saveCart(){
@@ -472,6 +525,7 @@
     loadCart();   // <-- carga desde localStorage
     syncCart();   // <-- pinta UI y guarda el estado normalizado
     document.getElementById('y').textContent = new Date().getFullYear();
+    
   </script>
 </body>
 </html>
