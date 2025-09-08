@@ -233,26 +233,29 @@
 }
 
 /* En pantallas pequeñas, todo un pelín más compacto */
-@media (max-width: 480px){
-  .appbar .row{ grid-template-columns: auto 1fr auto; gap: 8px; padding: 8px; }
-  .brand img{ height: 32px; }
-  .brand-title{ font-size: 20px; }
-  .chip{ padding: 6px 8px; }
-  .cart-btn{ width: 40px; height: 40px; }
-  .cart-btn svg{ width: 20px; height: 20px; }
-}    
-.appbar .row {
-  grid-template-columns: auto 1fr auto; /* logo - buscador - carrito */
-  gap: 8px;
-  overflow: hidden;  /* evita que desborde horizontal */
-}
+@media (max-width:480px){
+  /* Fila: logo | buscador | carrito (3 columnas) */
+  .appbar .row{
+    display:grid;
+    grid-template-columns: min-content 1fr min-content; /* logo - buscador elástico - carrito fijo */
+    gap:8px;
+    align-items:center;
+  }
 
-.actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  min-width: 60px;   /* reserva espacio al carrito */
-}
+  /* El buscador no debe forzar ancho */
+  .search{ min-width:0; }
+  #q{ width:100%; min-width:0; }
+
+  /* Botón carrito compacto y visible */
+  .actions{ display:flex; justify-content:flex-end; min-width:auto; }
+  .cart-btn{ width:40px; height:40px; flex:0 0 40px; }
+  .cart-btn svg{ width:20px; height:20px; }
+
+  /* Globito de cantidad, que no se salga */
+  .cart-badge{ top:2px; right:2px; }
+} .wrap{ padding-left:12px; padding-right:12px; }
+.grid{ overflow:hidden; }
+.thumb img{ max-width:100%; height:auto; }
   </style>
 </head>
 <body> <!-- ===== HTML ===== -->
