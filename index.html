@@ -15,20 +15,22 @@
       --hueso:#E8E3DD;
       --blanco:#FFFFFF;
       --borde: color-mix(in oklab, var(--moka) 22%, var(--hueso));
-      --sombra: 0 10px 30px rgba(0,0,0,.08);
+      --sombra-sm: 0 4px 16px rgba(0,0,0,.06);
+      --sombra-md: 0 10px 30px rgba(0,0,0,.08);
       --radio:16px;
+      --verde-wa:#25D366;
     }
 
     /* Fuente de marca */
     @font-face{
       font-family:"Pricedown Black";
       src: url("Pricedown-Black.otf") format("opentype"),
-           url("pricedown bl.otf") format("opentype");
       font-weight:900; font-style:normal; font-display:swap;
     }
 
     *{box-sizing:border-box}
     html,body{margin:0}
+
     /* Fondo con patrón (patron-fondo.jpeg) */
     body{
       font-family:"Lexend", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -43,6 +45,7 @@
       -webkit-font-smoothing: antialiased;
       text-rendering: optimizeLegibility;
     }
+
     .wrap{max-width:1160px; margin:auto; padding:0 16px}
 
     /* ===== Top App Bar ===== */
@@ -66,14 +69,25 @@
     .search{
       display:flex; align-items:center; gap:10px; background:#fff;
       border:1px solid var(--borde); border-radius:999px; padding:8px 12px;
+      box-shadow: var(--sombra-sm);
     }
     .search svg{width:18px; height:18px; opacity:.6}
     #q{border:0; outline:0; flex:1; font-size:14px; background:transparent}
 
-    .actions{display:flex; gap:8px; align-items:center}
-    .chip{
-      display:inline-flex; align-items:center; gap:6px; padding:8px 12px;
-      border:1px solid var(--borde); border-radius:999px; background:#fff; font-weight:700;
+    .actions{display:flex; gap:10px; align-items:center}
+
+    /* Botón carrito en appbar */
+    .cart-btn{
+      position:relative; display:inline-flex; align-items:center; justify-content:center;
+      gap:8px; padding:8px 12px; border:1px solid var(--borde); border-radius:999px;
+      background:#fff; cursor:pointer; font-weight:800;
+      box-shadow:var(--sombra-sm);
+    }
+    .cart-btn svg{width:20px; height:20px}
+    .cart-badge{
+      position:absolute; top:-8px; right:-8px; background:var(--rojo); color:#fff;
+      border-radius:999px; font-size:12px; font-weight:900; padding:2px 7px; line-height:1;
+      min-width:22px; text-align:center;
     }
 
     /* ===== Filtros ===== */
@@ -81,6 +95,7 @@
     .filters button{
       border:1px solid var(--borde); background:#fff; color:var(--moka);
       padding:8px 12px; border-radius:999px; font-weight:800; cursor:pointer;
+      box-shadow:var(--sombra-sm);
     }
     .filters button.active{background:var(--rojo); color:#fff; border-color:var(--rojo)}
 
@@ -91,11 +106,11 @@
     }
     .card{
       background:#fff; border:1px solid var(--borde); border-radius:var(--radio); overflow:hidden;
-      display:flex; flex-direction:column; box-shadow:var(--sombra); transition:.25s transform ease;
+      display:flex; flex-direction:column; box-shadow:var(--sombra-md); transition:.25s transform ease;
     }
     .card:hover{transform:translateY(-3px)}
 
-    /* Opción 2: contener (sin recortes) */
+    /* Imágenes SIN recorte (contain) */
     .thumb{
       aspect-ratio:4/3;
       background:color-mix(in oklab, var(--rojo) 12%, var(--hueso));
@@ -114,16 +129,32 @@
     .btn{
       flex:1; text-decoration:none; text-align:center; border-radius:10px; padding:10px 12px;
       font-weight:800; border:1px solid var(--rojo); color:var(--rojo); background:#fff;
+      cursor:pointer;
     }
     .btn.fill{background:var(--rojo); color:#fff}
 
-    /* FAB WhatsApp */
-    .wa-fab{
-      position:fixed; right:16px; bottom:16px; z-index:40;
-      width:58px; height:58px; border-radius:50%; display:grid; place-items:center;
-      background:#25D366; color:#fff; text-decoration:none; box-shadow:0 10px 24px rgba(0,0,0,.18);
-      font-size:26px;
+    /* ===== Drawer Carrito ===== */
+    .drawer{position:fixed; inset:0; display:none; z-index:50}
+    .drawer.open{display:block}
+    .drawer .backdrop{position:absolute; inset:0; background:rgba(0,0,0,.35)}
+    .drawer .panel{
+      position:absolute; right:0; top:0; height:100%; width:min(420px, 100%);
+      background:#fff; display:flex; flex-direction:column; box-shadow:-20px 0 40px rgba(0,0,0,.2);
+      border-left:3px solid var(--rojo);
     }
+    .panel header{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px; border-bottom:1px solid var(--borde)}
+    .panel h3{margin:0; font-size:18px}
+    .cart-list{flex:1; overflow:auto; padding:12px}
+    .item{display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center; border:1px solid var(--borde); border-radius:12px; padding:10px; margin-bottom:10px}
+    .item h4{margin:0 0 4px 0; font-size:15px}
+    .muted{font-size:12px; color:#777}
+    .qty{display:flex; align-items:center; gap:8px}
+    .qty button{width:28px; height:28px; border-radius:6px; border:1px solid var(--borde); background:#fff; font-weight:900; cursor:pointer}
+    .item .remove{border:0; background:transparent; color:#888; cursor:pointer}
+    .panel footer{border-top:1px solid var(--borde); padding:14px; display:grid; gap:10px}
+    .total{display:flex; justify-content:space-between; font-weight:900}
+    .wa{display:inline-flex; align-items:center; justify-content:center; gap:8px; background:var(--verde-wa); color:#fff; border:0; padding:12px; border-radius:10px; font-weight:800; text-decoration:none; text-align:center}
+    .wa svg{width:18px; height:18px}
 
     /* Footer */
     footer{background:#fff; border-top:4px solid var(--rojo)}
@@ -138,6 +169,7 @@
       .foot{grid-template-columns:1fr}
       .brand img{height:34px}
       .brand-title{font-size:22px}
+      .drawer .panel{width:100%}
     }
   </style>
 </head>
@@ -147,7 +179,6 @@
   <div class="appbar">
     <div class="wrap row">
       <div class="brand">
-        <!-- LOGO en .jpeg -->
         <img src="lavastida_logo.jpeg" alt="Lavastida" />
         <div>
           <h1 class="brand-title">LAVASTIDA</h1>
@@ -161,7 +192,13 @@
       </label>
 
       <div class="actions">
-        <div class="chip">CUP ▾</div>
+        <!-- Botón Carrito -->
+        <button class="cart-btn" id="openCart" type="button" title="Ver carrito">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M7 4h-.8a1 1 0 1 1 0-2H7a1 1 0 0 1 .96.73L8.3 4H21a1 1 0 0 1 .96 1.27l-2 7A1 1 0 0 1 19 13H9a1 1 0 0 1-1-.76L6.2 5.2 5.8 4H3a1 1 0 1 1 0-2h3a1 1 0 0 1 .96.73L8.3 4H7Zm2.4 11a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2Zm8 0a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2Z"/>
+          </svg>
+          <span class="cart-badge" id="cartCount">0</span>
+        </button>
       </div>
     </div>
   </div>
@@ -181,13 +218,30 @@
     <p style="margin:6px 0 18px;opacity:.75;font-size:13px">* Precios en CUP; orientativos según peso/harina disponible.</p>
   </main>
 
-  <!-- FAB WhatsApp -->
-  <a class="wa-fab" href="https://wa.me/5355427887?text=Hola%20Lavastida%2C%20quiero%20hacer%20un%20pedido" target="_blank" aria-label="WhatsApp">🟢</a>
+  <!-- ===== DRAWER: Carrito ===== -->
+  <div class="drawer" id="drawer" aria-hidden="true">
+    <div class="backdrop" id="closeCart" tabindex="-1" aria-label="Cerrar carrito"></div>
+    <div class="panel" role="dialog" aria-modal="true" aria-labelledby="cartTitle">
+      <header>
+        <h3 id="cartTitle">Tu pedido</h3>
+        <button class="btn" id="clearCart" type="button">Vaciar</button>
+      </header>
+      <div class="cart-list" id="cartList"></div>
+      <footer>
+        <div class="total"><span>Total</span><span id="cartTotal">CUP 0</span></div>
+        <a class="wa" id="sendWA" href="#" target="_blank" rel="noopener" aria-label="Enviar por WhatsApp">
+          <!-- Icono WhatsApp -->
+          <svg viewBox="0 0 24 24" fill="#fff"><path d="M20.5 3.5A11.8 11.8 0 0012 0 12 12 0 001 18.4L0 24l5.7-1.5A12 12 0 1020.5 3.5zM12 21a9 9 0 01-4.6-1.2l-.3-.2-3.4.9.9-3.3-.2-.3A9 9 0 1121 12a9 9 0 01-9 9z"/></svg>
+          Enviar por WhatsApp
+        </a>
+      </footer>
+    </div>
+  </div>
 
   <!-- ===== FOOTER ===== -->
   <footer>
     <div class="wrap foot">
-      <small><strong>Horario & Encargos:</strong> Lun–Mié-Jue-Vie, 9:00–19:00 (encargos con 1 día de antelación).<br>
+      <small><strong>Horario & Encargos:</strong> Lun–Mié-Jue–Vie, 9:00–19:00 (encargos con 1 día de antelación).<br>
       Dirección: 5ta A #6211, e/62 y 64, La Habana, Playa, Miramar.</small>
 
       <div class="social" aria-label="Redes sociales">
@@ -199,16 +253,16 @@
         <a href="https://www.facebook.com/share/19KFP6AqJJ/?mibextid=wwXIfr" target="_blank" title="Facebook" aria-label="Facebook">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22 12a10 10 0 10-11.6 9.9v-7h-2v-3h2v-2.3c0-2 1.2-3.2 3-3.2.9 0 1.8.2 1.8.2v2h-1c-1 0-1.4.6-1.4 1.3V12h2.5l-.4 3h-2v7A10 10 0 0022 12z"/></svg>
         </a>
-        <!-- WhatsApp -->
+        <!-- WhatsApp directo -->
         <a href="https://wa.me/5355427887" target="_blank" title="WhatsApp" aria-label="WhatsApp">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.5 3.5A11.8 11.8 0 0012 0 12 12 0 001 18.4L0 24l5.7-1.5A12 12 0 1020.5 3.5zM12 21a9 9 0 01-4.6-1.2l-.3-.2-3.4.9.9-3.3-.2-.3A9 9 0 1121 12a9 9 0 01-9 9z"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.5 3.5A11.8 11.8 0 0012 0 12 12 0 001 18.4L0 24l5.7-1.5A12 12 0 1020.5 3.5z"/></svg>
         </a>
       </div>
     </div>
     <div class="copy">© <span id="y"></span> Annette Lavastida</div>
   </footer>
 
-  <!-- ===== SCRIPT: catálogo + búsqueda + filtros ===== -->
+  <!-- ===== SCRIPT: catálogo + búsqueda + filtros + carrito (con memoria) ===== -->
   <script>
     // Catálogo
     const catalogo = [
@@ -220,7 +274,7 @@
       { nombre:'Babka (chocolate o canela)',  precio:'CUP 1,500', categoria:'dulce',   img:'babka.jpeg' },
       { nombre:'Cinnamon Roll',             precio:'CUP 360',   categoria:'dulce',   img:'cinnamon.jpeg' },
 
-      // Panes (precios)
+      // Panes
       { nombre:'Baguette 150g',             precio:'CUP 250', categoria:'pan', img:'baguette150.jpeg' },
       { nombre:'Baguette 300g',             precio:'CUP 500', categoria:'pan', img:'baguette300.jpeg' },
       { nombre:'Baguette 500g',             precio:'CUP 700', categoria:'pan', img:'baguette500.jpeg' },
@@ -240,17 +294,115 @@
     ];
 
     // Orden alfabético (español + números)
-    const productos = catalogo.sort((a,b)=> a.nombre.localeCompare(b.nombre,'es',{numeric:true,sensitivity:'base'}));
+    const productos = catalogo.slice().sort((a,b)=> a.nombre.localeCompare(b.nombre,'es',{numeric:true,sensitivity:'base'}));
 
     // Elementos UI
     const grid = document.getElementById('grid');
     const q = document.getElementById('q');
     const filtros = document.querySelectorAll('#filtros button');
 
-    // Tarjeta
+    // === Carrito (estado + persistencia) ===
+    const CART_KEY = 'lavastida_cart_v1';
+    const cart = new Map(); // key: nombre -> { producto, qty }
+
+    const drawer   = document.getElementById('drawer');
+    const openCart = document.getElementById('openCart');
+    const closeCart= document.getElementById('closeCart');
+    const cartList = document.getElementById('cartList');
+    const cartTotal= document.getElementById('cartTotal');
+    const cartCount= document.getElementById('cartCount');
+    const clearCart= document.getElementById('clearCart');
+    const sendWA   = document.getElementById('sendWA');
+
+    const priceToNumber = p => Number(p.replace(/[^\d]/g,''));
+    const fmt = n => 'CUP ' + n.toLocaleString('es-ES');
+
+    // ====== Persistencia ======
+    function saveCart(){
+      const plain = [...cart.values()].map(({producto,qty})=>({
+        nombre: producto.nombre,
+        precio: producto.precio,
+        categoria: producto.categoria,
+        img: producto.img || '',
+        qty
+      }));
+      localStorage.setItem(CART_KEY, JSON.stringify(plain));
+    }
+    function loadCart(){
+      try{
+        const raw = localStorage.getItem(CART_KEY);
+        if(!raw) return;
+        const arr = JSON.parse(raw);
+        arr.forEach(entry=>{
+          const p = { nombre:entry.nombre, precio:entry.precio, categoria:entry.categoria, img:entry.img };
+          cart.set(p.nombre, { producto:p, qty:Number(entry.qty)||0 });
+        });
+      }catch(e){ console.warn('No se pudo cargar el carrito guardado:', e); }
+    }
+
+    // === Lógica de carrito ===
+    function add(p){
+      const key = p.nombre;
+      const item = cart.get(key) || { producto: p, qty: 0 };
+      item.qty++;
+      cart.set(key, item);
+      syncCart();
+    }
+    function inc(name){ const it = cart.get(name); if(!it) return; it.qty++; syncCart(); }
+    function dec(name){ const it = cart.get(name); if(!it) return; it.qty--; if(it.qty<=0) cart.delete(name); syncCart(); }
+    function delItem(name){ cart.delete(name); syncCart(); }
+    function empty(){ cart.clear(); syncCart(); }
+
+    function totalQty(){ let t=0; cart.forEach(i=>t+=i.qty); return t; }
+    function totalCUP(){ let t=0; cart.forEach(i=> t += priceToNumber(i.producto.precio) * i.qty ); return t; }
+
+    function buildMessage(){
+      if(cart.size===0) return "Hola Lavastida, quiero consultar disponibilidad.";
+      const lines = ["Hola Lavastida, quiero este pedido:", ""];
+      cart.forEach(({producto,qty})=>{
+        lines.push(`- ${producto.nombre} × ${qty} — ${producto.precio}`);
+      });
+      lines.push("", `Total: ${fmt(totalCUP())}`, "", "¿Disponibilidad y tiempo de entrega?");
+      return lines.join("\n");
+    }
+
+    function syncCart(){
+      // contador en botón
+      cartCount.textContent = totalQty();
+
+      // lista del drawer
+      cartList.innerHTML = [...cart.values()].map(({producto,qty})=>`
+        <div class="item">
+          <div>
+            <h4>${producto.nombre}</h4>
+            <div class="muted">${producto.precio} · ${producto.categoria}</div>
+          </div>
+          <div class="qty">
+            <button onclick="DEC('${producto.nombre.replace(/'/g,"\\'")}')">−</button>
+            <strong>${qty}</strong>
+            <button onclick="INC('${producto.nombre.replace(/'/g,"\\'")}')">+</button>
+            <button class="remove" title="Eliminar" onclick="DEL('${producto.nombre.replace(/'/g,"\\'")}')">✕</button>
+          </div>
+        </div>
+      `).join('') || '<p style="opacity:.7">Tu carrito está vacío.</p>';
+
+      // total
+      cartTotal.textContent = fmt(totalCUP());
+
+      // WhatsApp
+      const mensaje = encodeURIComponent(buildMessage());
+      sendWA.href = `https://wa.me/5355427887?text=${mensaje}`;
+
+      // guardar
+      saveCart();
+    }
+
+    // Exponer funciones para los botones del drawer
+    window.INC = inc; window.DEC = dec; window.DEL = delItem;
+
+    // === UI de catálogo ===
     function card(p){
       const imgTag = p.img ? `<img src="${p.img}" alt="${p.nombre}" onerror="this.style.display='none'">` : '';
-      const wa = encodeURIComponent(`Hola Lavastida, quiero encargar: ${p.nombre} (${p.precio}).`);
       return `
         <article class="card" data-cat="${p.categoria}">
           <div class="thumb">${imgTag}</div>
@@ -260,13 +412,11 @@
             <div class="price">${p.precio}</div>
           </div>
           <div class="cta">
-            <a class="btn" href="mailto:pedidos@lavastida.cu?subject=Pedido: ${encodeURIComponent(p.nombre)}&body=${wa}">Correo</a>
-            <a class="btn fill" href="https://wa.me/5355427887?text=${wa}" target="_blank" rel="noopener">WhatsApp</a>
+            <button class="btn fill" onclick='add(${JSON.stringify(p)})'>Añadir</button>
           </div>
         </article>`;
     }
 
-    // Render
     function render(filtro='todas', texto=''){
       const term = texto.trim().toLowerCase();
       grid.innerHTML = productos
@@ -290,8 +440,15 @@
       render(activo, q.value);
     });
 
+    // Drawer events
+    openCart.addEventListener('click', ()=> { drawer.classList.add('open'); drawer.setAttribute('aria-hidden','false'); });
+    closeCart.addEventListener('click', ()=> { drawer.classList.remove('open'); drawer.setAttribute('aria-hidden','true'); });
+    clearCart.addEventListener('click', empty);
+
     // Inicio
     render();
+    loadCart();   // <-- carga desde localStorage
+    syncCart();   // <-- pinta UI y guarda el estado normalizado
     document.getElementById('y').textContent = new Date().getFullYear();
   </script>
 </body>
