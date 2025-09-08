@@ -168,6 +168,33 @@
     .total{display:flex; justify-content:space-between; font-weight:900}
     .wa{display:inline-flex; align-items:center; justify-content:center; gap:8px; background:var(--verde-wa); color:#fff; border:0; padding:12px; border-radius:10px; font-weight:800; text-decoration:none; text-align:center}
     .wa svg{width:18px; height:18px}
+    .wa a {
+  color: #fff;              /* texto blanco */
+  text-decoration: none;    /* quita el subrayado */
+  font-weight: 700;         /* más vistoso */
+}
+
+.wa a:hover {
+  color: #fff;              /* sigue blanco al pasar el mouse */
+  text-decoration: none;    /* evita que reaparezca el subrayado */
+}
+    /* Botón de WhatsApp en el carrito */
+    .cart-footer .wa {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 14px;
+    background: #25D366; /* verde oficial WhatsApp */
+    border-radius: 8px;
+    text-decoration: none;  /* quita el subrayado */
+    font-weight: bold;
+    font-size: 16px;
+    color: #fff;           /* texto blanco */
+    transition: background 0.2s ease;
+    }
+    .cart-footer .wa:hover {
+    background: #20b358;   /* tono más oscuro al pasar el mouse */
+    }
 
     /* Footer */
     footer{background:#fff; border-top:4px solid var(--rojo)}
