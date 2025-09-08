@@ -216,6 +216,8 @@
        /* Botón carrito ya en tu HTML: solo afinamos tamaños en móvil */
 .appbar .row{ overflow: visible; } /* que no recorte el badge */
 
+
+
 .cart-btn{
   position: relative;
   width: 44px; height: 44px; border-radius: 50%;
@@ -239,7 +241,18 @@
   .cart-btn{ width: 40px; height: 40px; }
   .cart-btn svg{ width: 20px; height: 20px; }
 }    
+.appbar .row {
+  grid-template-columns: auto 1fr auto; /* logo - buscador - carrito */
+  gap: 8px;
+  overflow: hidden;  /* evita que desborde horizontal */
+}
 
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 60px;   /* reserva espacio al carrito */
+}
   </style>
 </head>
 <body> <!-- ===== HTML ===== -->
