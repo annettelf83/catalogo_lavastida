@@ -480,7 +480,7 @@
       cart.forEach(({producto,qty})=>{
         lines.push(`- ${producto.nombre} × ${qty} — ${producto.precio}`);
       });
-      lines.push("", `Total: ${fmt(totalCUP())}`, "", "¿Disponibilidad y tiempo de entrega?");
+      lines.push("", `Total: ${fmt(totalCUP())}`, "", "Espero su confirmación. ¡Gracias!");
       return lines.join("\n");
     }
 
