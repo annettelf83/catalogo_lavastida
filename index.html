@@ -565,6 +565,18 @@
     closeCart.addEventListener('click', ()=> { drawer.classList.remove('open'); drawer.setAttribute('aria-hidden','true'); });
     clearCart.addEventListener('click', empty);
 
+   // =====================
+// Reseteo automático de carrito cuando cambien precios
+// =====================
+const VERSION = "2025-02-01"; // cambia esta fecha cada vez que ajustes precios
+
+const savedVersion = localStorage.getItem("lavastida_version");
+
+if (savedVersion !== VERSION) {
+    localStorage.clear();
+    localStorage.setItem("lavastida_version", VERSION);
+}
+// =====================
     // Inicio
     render();
     loadCart();   // <-- carga desde localStorage
