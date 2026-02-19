@@ -792,9 +792,11 @@
     window.INC = inc; window.DEC = dec; window.DEL = delItem;
 
     // === UI de catálogo ===
-    function card(p){
+    function card(p, idx = 0){
+      const loadingMode = idx < 2 ? 'eager' : 'lazy';
+      const fetchPriority = idx < 2 ? 'high' : 'low';
       const imgTag = p.img
-        ? `<img src="${p.img}" alt="${p.nombre}" loading="lazy" decoding="async" width="640" height="480" onerror="this.style.display='none'">`
+        ? `<img src="${p.img}" alt="${p.nombre}" loading="${loadingMode}" fetchpriority="${fetchPriority}" decoding="async" width="640" height="480" onerror="this.style.display='none'">`
         : '';
       return `
         <article class="card" data-cat="${p.categoria}">
@@ -815,7 +817,7 @@
       grid.innerHTML = productos
         .filter(p => filtro==='todas' ? true : p.categoria===filtro)
         .filter(p => term ? p.nombre.toLowerCase().includes(term) : true)
-        .map(card).join('');
+        .map((p, idx)=>card(p, idx)).join('');
     }
 
     // Filtros
