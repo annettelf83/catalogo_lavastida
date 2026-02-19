@@ -135,7 +135,7 @@
     .body{padding:14px 14px 8px; display:flex; flex-direction:column; flex:1}
     .title{
       margin:0; font-size:18px; font-weight:800; color:var(--moka); line-height:1.25;
-      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+      display:-webkit-box; line-clamp:2; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
       min-height:2.5em;
     }
     .badge{display:inline-block; margin-top:6px; font-size:12px; font-weight:700; color:var(--rojo)}
@@ -188,6 +188,10 @@
       border:0; min-height:52px; padding:12px 16px; border-radius:12px; font-weight:800; font-size:18px;
       text-decoration:none; text-align:center; -webkit-text-size-adjust:100%;
     }
+    .wa.disabled{
+      opacity:.55;
+      filter:grayscale(.2);
+    }
     .wa svg{width:18px; height:18px}
     .wa a {
   color: #fff;              /* texto blanco */
@@ -210,21 +214,12 @@
     .delivery-btn.active{
       border-color:var(--rojo); background:color-mix(in oklab, var(--rojo) 10%, #fff); color:var(--rojo);
     }
-    .delivery-data-btn{
-      width:100%;
-      border:1px solid var(--borde);
-      border-radius:10px;
-      background:#fff;
-      color:var(--moka);
-      font-weight:700;
-      padding:10px 12px;
-      cursor:pointer;
-    }
     .delivery-summary{
       font-size:12px;
       color:#666;
       line-height:1.35;
     }
+    .delivery-extra[hidden]{display:none}
     .delivery-modal{position:fixed; inset:0; display:none; z-index:80}
     .delivery-modal.open{display:block}
     .delivery-modal .backdrop{position:absolute; inset:0; background:rgba(0,0,0,.4)}
@@ -382,8 +377,7 @@
           <button class="delivery-btn active" id="deliveryNo" type="button" aria-pressed="true">Sin mensajería</button>
           <button class="delivery-btn" id="deliveryYes" type="button" aria-pressed="false">Con mensajería</button>
         </div>
-        <button class="delivery-data-btn" id="openDeliveryData" type="button">Datos de entrega a domicilio</button>
-        <div class="delivery-summary" id="deliverySummary">Sin datos de entrega guardados.</div>
+        <div class="delivery-summary" id="deliverySummary">Sin datos del cliente guardados.</div>
         <div class="total"><span>Total</span><span id="cartTotal">CUP 0</span></div>
         <a class="wa" id="sendWA" href="#" target="_blank" rel="noopener" aria-label="Enviar por WhatsApp">
           <!-- Icono WhatsApp -->
@@ -397,7 +391,7 @@
     <div class="backdrop" id="deliveryModalBackdrop"></div>
     <div class="box" role="dialog" aria-modal="true" aria-labelledby="deliveryModalTitle">
       <header>
-        <h4 id="deliveryModalTitle">Datos de entrega</h4>
+        <h4 id="deliveryModalTitle">Datos del cliente</h4>
         <button id="closeDeliveryModal" class="close-btn" type="button" aria-label="Cerrar">✖</button>
       </header>
       <div class="delivery-form">
@@ -407,13 +401,13 @@
         <label>Teléfono de contacto
           <input id="deliveryPhone" type="tel" autocomplete="tel" placeholder="53..." />
         </label>
-        <label>Dirección
+        <label class="delivery-extra" id="deliveryAddressWrap">Dirección
           <textarea id="deliveryAddress" placeholder="Calle, número, entre calles..."></textarea>
         </label>
-        <label>Municipio / zona
+        <label class="delivery-extra" id="deliveryZoneWrap">Municipio / zona
           <input id="deliveryZone" type="text" placeholder="Ej: Playa, Miramar" />
         </label>
-        <label>Referencia adicional
+        <label class="delivery-extra" id="deliveryRefWrap">Referencia adicional
           <textarea id="deliveryRef" placeholder="Edificio, timbre, piso, puntos de referencia..."></textarea>
         </label>
       </div>
@@ -516,19 +510,25 @@
     const sendWA   = document.getElementById('sendWA');
     const deliveryNo = document.getElementById('deliveryNo');
     const deliveryYes = document.getElementById('deliveryYes');
-    const openDeliveryData = document.getElementById('openDeliveryData');
     const deliverySummary = document.getElementById('deliverySummary');
     const deliveryModal = document.getElementById('deliveryModal');
     const closeDeliveryModal = document.getElementById('closeDeliveryModal');
     const cancelDeliveryData = document.getElementById('cancelDeliveryData');
     const saveDeliveryData = document.getElementById('saveDeliveryData');
     const deliveryModalBackdrop = document.getElementById('deliveryModalBackdrop');
+    const deliveryModalTitle = document.getElementById('deliveryModalTitle');
     const deliveryName = document.getElementById('deliveryName');
     const deliveryPhone = document.getElementById('deliveryPhone');
     const deliveryAddress = document.getElementById('deliveryAddress');
     const deliveryZone = document.getElementById('deliveryZone');
     const deliveryRef = document.getElementById('deliveryRef');
+    const deliveryAddressWrap = document.getElementById('deliveryAddressWrap');
+    const deliveryZoneWrap = document.getElementById('deliveryZoneWrap');
+    const deliveryRefWrap = document.getElementById('deliveryRefWrap');
 
+    const WA_PHONE = '5351969532';
+    const waPhoneDigits = WA_PHONE.replace(/[^\d]/g, '');
+    const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
     const priceToNumber = p => Number(p.replace(/[^\d]/g,''));
     const fmt = n => 'CUP ' + n.toLocaleString('es-ES');
     const DELIVERY_KEY = 'lavastida_delivery_v1';
@@ -553,6 +553,12 @@
       deliveryNo.setAttribute('aria-pressed', String(!isCon));
       deliveryYes.classList.toggle('active', isCon);
       deliveryYes.setAttribute('aria-pressed', String(isCon));
+      deliveryModalTitle.textContent = isCon
+        ? 'Datos de entrega'
+        : 'Datos del cliente (sin mensajería)';
+      deliveryAddressWrap.hidden = !isCon;
+      deliveryZoneWrap.hidden = !isCon;
+      deliveryRefWrap.hidden = !isCon;
     }
     function renderDeliverySummary(){
       const parts = [];
@@ -561,8 +567,8 @@
       if (deliveryData.address) parts.push(deliveryData.address);
       if (deliveryData.zone) parts.push(deliveryData.zone);
       deliverySummary.textContent = parts.length
-        ? `Entrega guardada: ${parts.join(' · ')}`
-        : 'Sin datos de entrega guardados.';
+        ? `Datos guardados: ${parts.join(' · ')}`
+        : 'Sin datos del cliente guardados.';
     }
     function fillDeliveryForm(){
       deliveryName.value = deliveryData.name;
@@ -613,11 +619,12 @@
       deliveryModal.classList.remove('open');
       deliveryModal.setAttribute('aria-hidden', 'true');
     }
-    function setDelivery(mode){
+    function setDelivery(mode, openModalNow = false){
       deliveryMode = mode === 'con' ? 'con' : 'sin';
       localStorage.setItem(DELIVERY_KEY, deliveryMode);
       applyDeliveryButtons();
       syncCart();
+      if (openModalNow) openDeliveryModal();
     }
     function loadDelivery(){
       const saved = localStorage.getItem(DELIVERY_KEY);
@@ -636,9 +643,8 @@
 
     closeCart.addEventListener('click', closeDrawer);
     cartBackdrop.addEventListener('click', closeDrawer);
-    deliveryNo.addEventListener('click', ()=>setDelivery('sin'));
-    deliveryYes.addEventListener('click', ()=>setDelivery('con'));
-    openDeliveryData.addEventListener('click', openDeliveryModal);
+    deliveryNo.addEventListener('click', ()=>setDelivery('sin', true));
+    deliveryYes.addEventListener('click', ()=>setDelivery('con', true));
     closeDeliveryModal.addEventListener('click', closeDeliveryModalWindow);
     cancelDeliveryData.addEventListener('click', closeDeliveryModalWindow);
     deliveryModalBackdrop.addEventListener('click', closeDeliveryModalWindow);
@@ -701,7 +707,13 @@
     function buildMessage(){
       if(cart.size===0) return "Hola Lavastida, quiero consultar disponibilidad.";
       const entrega = deliveryMode === 'con' ? 'Con mensajería' : 'Sin mensajería';
-      const lines = ["Hola Lavastida, quiero este pedido:", `Entrega: ${entrega}`, ""];
+      const lines = [
+        "Hola Lavastida, quiero este pedido:",
+        `Cliente: ${deliveryData.name || "No indicado"}`,
+        `Teléfono: ${deliveryData.phone || "No indicado"}`,
+        `Entrega: ${entrega}`,
+        ""
+      ];
       cart.forEach(({producto,qty})=>{
         lines.push(`- ${producto.nombre} × ${qty} — ${producto.precio}`);
       });
@@ -716,6 +728,33 @@
       }
       lines.push("", `Total: ${fmt(totalCUP())}`, "", "Espero su confirmación. ¡Gracias!");
       return lines.join("\n");
+    }
+    function buildWhatsAppUrl(){
+      const mensaje = encodeURIComponent(buildMessage());
+      if (isMobileDevice) {
+        return `https://wa.me/${waPhoneDigits}?text=${mensaje}`;
+      }
+      return `https://web.whatsapp.com/send?phone=${waPhoneDigits}&text=${mensaje}`;
+    }
+
+    function getDeliveryValidation(){
+      const missing = [];
+      if (!deliveryData.name) missing.push('nombre');
+      if (!deliveryData.phone) missing.push('telefono');
+      if (deliveryMode === 'con' && !deliveryData.address) missing.push('direccion');
+      return {
+        ok: missing.length === 0,
+        missing
+      };
+    }
+    function updateSendWAState(){
+      const { ok } = getDeliveryValidation();
+      sendWA.classList.toggle('disabled', !ok);
+      sendWA.setAttribute('aria-disabled', String(!ok));
+      const req = deliveryMode === 'con'
+        ? 'Requiere nombre, telefono y direccion'
+        : 'Requiere nombre y telefono';
+      sendWA.title = ok ? 'Enviar por WhatsApp' : req;
     }
 
     function syncCart(){
@@ -742,8 +781,8 @@
       cartTotal.textContent = fmt(totalCUP());
 
       // WhatsApp
-      const mensaje = encodeURIComponent(buildMessage());
-      sendWA.href = `https://wa.me/5351969532?text=${mensaje}`;
+      sendWA.href = buildWhatsAppUrl();
+      updateSendWAState();
 
       // guardar
       saveCart();
@@ -797,6 +836,17 @@
     // Drawer events
     openCart.addEventListener('click', openDrawer);
     clearCart.addEventListener('click', empty);
+    sendWA.addEventListener('click', (e)=>{
+      const validation = getDeliveryValidation();
+      if (validation.ok) return;
+      e.preventDefault();
+      alert(
+        deliveryMode === 'con'
+          ? 'Para enviar con mensajeria, complete: nombre, telefono y direccion.'
+          : 'Para enviar sin mensajeria, complete: nombre y telefono.'
+      );
+      openDeliveryModal();
+    });
 
    // =====================
 // Reseteo automático de carrito cuando cambie precios
