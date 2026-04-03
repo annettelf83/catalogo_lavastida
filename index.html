@@ -488,7 +488,7 @@
     // Auto-actualización: compara version local vs servidor
     // Cuando publiques cambios, sube v.txt con un numero nuevo
     (function(){
-      var LOCAL_V = '4';
+      var LOCAL_V = '5';
       fetch('v.txt?' + Date.now(), {cache:'no-store'})
         .then(function(r){ return r.text(); })
         .then(function(t){
@@ -603,7 +603,7 @@
         categoria: 'pan',
         img: 'brioche90.jpeg',
         variantes: [
-          { nombre: '25g',  precio: 0.10, img: 'brioche50.jpeg' },
+          { nombre: '25g',  precio: 0.15, img: 'brioche50.jpeg' },
           { nombre: '50g',  precio: 0.30, img: 'brioche50.jpeg' },
           { nombre: '90g',  precio: 0.60, img: 'brioche90.jpeg' },
           { nombre: '120g', precio: 0.80, img: 'brioche120.jpeg' },
