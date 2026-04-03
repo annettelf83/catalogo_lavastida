@@ -658,7 +658,8 @@
     ];
 
     // Orden alfabetico
-    familias.sort((a, b) => a.familia.localeCompare(b.familia, 'es', { sensitivity: 'base' }));
+    // Ordenar de mas barato a mas caro (por el precio minimo de cada familia)
+    familias.sort((a, b) => Math.min(...a.variantes.map(v => v.precio)) - Math.min(...b.variantes.map(v => v.precio)));
 
     // =====================
     // MODO VIP (productos ocultos)
