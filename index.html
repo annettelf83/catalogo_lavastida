@@ -670,10 +670,8 @@
       const val = urlParams.get('vip');
       if (val === '1') localStorage.setItem('lavastida_vip', '1');
       else localStorage.removeItem('lavastida_vip');
-      // Limpiar la URL para que no se vea el parametro
-      history.replaceState(null, '', window.location.pathname);
     }
-    const esVIP = localStorage.getItem('lavastida_vip') === '1';
+    const esVIP = urlParams.get('vip') === '1' || localStorage.getItem('lavastida_vip') === '1';
 
     // =====================
     // MONEDA Y TASA
