@@ -486,7 +486,7 @@
     // Auto-actualización: compara version local vs servidor
     // Cuando publiques cambios, sube v.txt con un numero nuevo
     (function(){
-      var LOCAL_V = '7';
+      var LOCAL_V = '8';
       // Si ya venimos de un reload forzado, no volver a chequear
       var u = new URL(window.location);
       if(u.searchParams.get('_r') === LOCAL_V) return;
@@ -850,7 +850,7 @@
 
         // Update pills
         const card = document.getElementById('card-' + famIdx);
-        card.querySelectorAll('.vpill').forEach((p, i) => p.classList.toggle('sel', i === varIdx));
+        card.querySelectorAll('.vpill').forEach(p => p.classList.toggle('sel', Number(p.dataset.var) === varIdx));
 
         // Update price
         document.getElementById('price-' + famIdx).textContent = fmtPrecio(v.precio);
