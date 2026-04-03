@@ -395,9 +395,9 @@
       <button class="currency-toggle" id="currencyToggle" type="button" title="Cambiar moneda">
         <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 17.93A8 8 0 0113 4.07V4a1 1 0 00-2 0v.07A8 8 0 0111 19.93V20a1 1 0 002 0v-.07zM9 12a3 3 0 116 0 3 3 0 01-6 0z"/></svg>
         <span id="currencyLabel">CUP</span>
+        <span class="tasa-info" id="tasaBar"></span>
       </button>
     </div>
-    <div id="tasaBar" class="tasa-info" style="margin:-6px 0 10px; padding-left:2px"></div>
 
     <div id="grid" class="grid"></div>
 
@@ -488,11 +488,18 @@
     // Auto-actualización: compara version local vs servidor
     // Cuando publiques cambios, sube v.txt con un numero nuevo
     (function(){
-      var LOCAL_V = '5';
+      var LOCAL_V = '6';
+      // Si ya venimos de un reload forzado, no volver a chequear
+      var u = new URL(window.location);
+      if(u.searchParams.get('_r') === LOCAL_V) return;
       fetch('v.txt?' + Date.now(), {cache:'no-store'})
         .then(function(r){ return r.text(); })
         .then(function(t){
-          if(t.trim() !== LOCAL_V) location.reload();
+          if(t.trim() !== LOCAL_V){
+            // Redirigir con parametro cache-buster para forzar descarga nueva
+            u.searchParams.set('_r', t.trim());
+            window.location.replace(u.href);
+          }
         })
         .catch(function(){});
     })();
