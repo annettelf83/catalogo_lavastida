@@ -118,7 +118,6 @@
     }
     .currency-toggle:hover{background:var(--rojo); color:#fff}
     .currency-toggle svg{width:14px; height:14px; fill:currentColor}
-    .tasa-info{font-size:11px; color:#888; font-weight:400}
 
     /* ===== Grid de productos ===== */
     .grid{
@@ -395,7 +394,6 @@
       <button class="currency-toggle" id="currencyToggle" type="button" title="Cambiar moneda">
         <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 17.93A8 8 0 0113 4.07V4a1 1 0 00-2 0v.07A8 8 0 0111 19.93V20a1 1 0 002 0v-.07zM9 12a3 3 0 116 0 3 3 0 01-6 0z"/></svg>
         <span id="currencyLabel">CUP</span>
-        <span class="tasa-info" id="tasaBar"></span>
       </button>
     </div>
 
@@ -488,7 +486,7 @@
     // Auto-actualización: compara version local vs servidor
     // Cuando publiques cambios, sube v.txt con un numero nuevo
     (function(){
-      var LOCAL_V = '6';
+      var LOCAL_V = '7';
       // Si ya venimos de un reload forzado, no volver a chequear
       var u = new URL(window.location);
       if(u.searchParams.get('_r') === LOCAL_V) return;
@@ -716,7 +714,6 @@
     const appbar = document.querySelector('.appbar');
     const currencyToggle = document.getElementById('currencyToggle');
     const currencyLabel = document.getElementById('currencyLabel');
-    const tasaBar = document.getElementById('tasaBar');
 
     // Carrito
     const CART_KEY = 'lavastida_cart_v2';
@@ -767,7 +764,7 @@
     // =====================
     function updateCurrencyUI() {
       currencyLabel.textContent = moneda;
-      tasaBar.textContent = 'Tasa: 1 USD = ' + tasaUSD.toLocaleString('es-ES') + ' CUP';
+      // tasa no se muestra publicamente
       localStorage.setItem(MONEDA_KEY, moneda);
     }
 
