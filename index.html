@@ -485,6 +485,19 @@
 
   <!-- ===== JAVASCRIPT ===== -->
   <script>
+    // Auto-actualización: compara version local vs servidor
+    // Cuando publiques cambios, sube v.txt con un numero nuevo
+    (function(){
+      var LOCAL_V = '2';
+      fetch('v.txt?' + Date.now(), {cache:'no-store'})
+        .then(function(r){ return r.text(); })
+        .then(function(t){
+          if(t.trim() !== LOCAL_V) location.reload();
+        })
+        .catch(function(){});
+    })();
+  </script>
+  <script>
     // =====================
     // DATOS DEL CATALOGO — precios FIJOS en USD
     // CUP se calcula: precioUSD * tasaUSD
