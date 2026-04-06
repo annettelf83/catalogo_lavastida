@@ -486,7 +486,7 @@
     // Auto-actualización: compara version local vs servidor
     // Cuando publiques cambios, sube v.txt con un numero nuevo
     (function(){
-      var LOCAL_V = '11';
+      var LOCAL_V = '12';
       // Si ya venimos de un reload forzado, no volver a chequear
       var u = new URL(window.location);
       if(u.searchParams.get('_r') === LOCAL_V) return;
@@ -695,14 +695,23 @@
     function fmtUSD(precioUSD) {
       return '$' + precioUSD.toFixed(2) + ' USD';
     }
+    function fmtCUPraw(cup) {
+      return 'CUP ' + cup.toLocaleString('es-ES');
+    }
     function fmtCUP(precioUSD) {
-      return 'CUP ' + toCUP(precioUSD).toLocaleString('es-ES');
+      return fmtCUPraw(toCUP(precioUSD));
     }
     function fmtPrecio(precioUSD) {
       return moneda === 'USD' ? fmtUSD(precioUSD) : fmtCUP(precioUSD);
     }
+    function fmtPrecioCUP(cup) {
+      return moneda === 'USD' ? fmtUSD(cup / tasaUSD) : fmtCUPraw(cup);
+    }
     function fmtDual(precioUSD) {
       return moneda === 'USD' ? fmtCUP(precioUSD) : fmtUSD(precioUSD);
+    }
+    function fmtDualCUP(cup) {
+      return moneda === 'USD' ? fmtCUPraw(cup) : fmtUSD(cup / tasaUSD);
     }
 
     // =====================
@@ -928,6 +937,7 @@
 
     function totalQty() { let t = 0; cart.forEach(i => t += i.qty); return t; }
     function totalUSD() { let t = 0; cart.forEach(i => t += i.precio * i.qty); return t; }
+    function totalCUP() { let t = 0; cart.forEach(i => t += toCUP(i.precio) * i.qty); return t; }
 
     function saveCart() {
       const data = [...cart.values()].map(({ nombre, precio, img, qty }) => ({ nombre, precio, img, qty }));
@@ -955,7 +965,7 @@
 
       cartList.innerHTML = [...cart.values()].map(item => {
         const esc = item.nombre.replace(/'/g, "\\'");
-        const sub = item.precio * item.qty;
+        const subCUP = toCUP(item.precio) * item.qty;
         const imgTag = item.img
           ? `<img class="item-thumb" src="${item.img}" alt="" loading="lazy" width="56" height="56">`
           : `<div class="item-thumb"></div>`;
@@ -974,7 +984,7 @@
                   <strong>${item.qty}</strong>
                   <button onclick="INC('${esc}')">+</button>
                 </div>
-                <div class="subtotal">${fmtPrecio(sub)}</div>
+                <div class="subtotal">${fmtPrecioCUP(subCUP)}</div>
               </div>
             </div>
           </div>`;
@@ -984,10 +994,10 @@
         <p style="margin:4px 0 0;font-size:13px">Agrega productos desde el catalogo</p>
       </div>`;
 
-      const total = totalUSD();
-      cartTotal.textContent = fmtPrecio(total);
+      const cupTotal = totalCUP();
+      cartTotal.textContent = fmtPrecioCUP(cupTotal);
       const dualEl = document.getElementById('cartTotalDual');
-      if (dualEl) dualEl.textContent = fmtDual(total);
+      if (dualEl) dualEl.textContent = fmtDualCUP(cupTotal);
       sendWA.href = buildWhatsAppUrl();
       updateSendWAState();
       saveCart();
@@ -1003,7 +1013,7 @@
     function buildMessage() {
       if (cart.size === 0) return "Hola Lavastida, quiero consultar disponibilidad.";
       const entrega = deliveryMode === 'con' ? 'Con mensajeria' : 'Sin mensajeria';
-      const total = totalUSD();
+      const cupTotal = totalCUP();
       const lines = [
         "Hola Lavastida, quiero este pedido:",
         `Cliente: ${deliveryData.name || "No indicado"}`,
@@ -1012,7 +1022,8 @@
         ""
       ];
       cart.forEach(item => {
-        lines.push(`- ${item.nombre} x ${item.qty} -- ${fmtUSD(item.precio)} (${fmtCUP(item.precio)})`);
+        const itemCUP = toCUP(item.precio) * item.qty;
+        lines.push(`- ${item.nombre} x ${item.qty} -- ${fmtUSD(item.precio)} (${fmtCUPraw(toCUP(item.precio))} c/u = ${fmtCUPraw(itemCUP)})`);
       });
       if (deliveryMode === 'con') {
         lines.push("", "Datos de entrega:");
@@ -1022,8 +1033,7 @@
         if (deliveryData.zone) lines.push(`- Zona: ${deliveryData.zone}`);
         if (deliveryData.ref) lines.push(`- Referencia: ${deliveryData.ref}`);
       }
-      lines.push("", `Total: ${fmtUSD(total)} (${fmtCUP(total)})`);
-      lines.push(`Tasa: 1 USD = ${tasaUSD} CUP`);
+      lines.push("", `Total: ${fmtCUPraw(cupTotal)} (${fmtUSD(cupTotal / tasaUSD)})`);
       lines.push("", "Espero su confirmacion. Gracias!");
       return lines.join("\n");
     }
