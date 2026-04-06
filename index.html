@@ -486,7 +486,7 @@
     // Auto-actualización: compara version local vs servidor
     // Cuando publiques cambios, sube v.txt con un numero nuevo
     (function(){
-      var LOCAL_V = '10';
+      var LOCAL_V = '11';
       // Si ya venimos de un reload forzado, no volver a chequear
       var u = new URL(window.location);
       if(u.searchParams.get('_r') === LOCAL_V) return;
@@ -690,7 +690,7 @@
     // precioUSD es el precio fijo en dolares
     // CUP se calcula: precioUSD * tasaUSD (redondeado)
     function toCUP(precioUSD) {
-      return Math.round(precioUSD * tasaUSD / 10) * 10;
+      return Math.round(precioUSD * tasaUSD);
     }
     function fmtUSD(precioUSD) {
       return '$' + precioUSD.toFixed(2) + ' USD';
