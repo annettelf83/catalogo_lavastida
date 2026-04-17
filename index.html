@@ -486,7 +486,7 @@
     // Auto-actualización: compara version local vs servidor
     // Cuando publiques cambios, sube v.txt con un numero nuevo
     (function(){
-      var LOCAL_V = '13';
+      var LOCAL_V = '14';
       // Si ya venimos de un reload forzado, no volver a chequear
       var u = new URL(window.location);
       if(u.searchParams.get('_r') === LOCAL_V) return;
@@ -683,9 +683,31 @@
     // MONEDA Y TASA
     // =====================
     const TASA_KEY = 'lavastida_tasa_usd';
+    const TASA_TIME_KEY = 'lavastida_tasa_time';
     const MONEDA_KEY = 'lavastida_moneda';
-    let tasaUSD = Number(localStorage.getItem(TASA_KEY)) || 516.5;
+    const WORKER_URL = 'https://tasa-lavastida.alavastida-bank.workers.dev';
+    const TASA_DEFAULT = 516.5;
+    let tasaUSD = Number(localStorage.getItem(TASA_KEY)) || TASA_DEFAULT;
     let moneda = localStorage.getItem(MONEDA_KEY) || 'CUP';
+
+    // Consultar tasa de El Toque via Worker (1 vez por hora max)
+    function fetchTasa() {
+      if (WORKER_URL === 'PENDIENTE') return;
+      var lastFetch = Number(localStorage.getItem(TASA_TIME_KEY)) || 0;
+      if (Date.now() - lastFetch < 3600000) return; // 1 hora
+      fetch(WORKER_URL, { cache: 'no-store' })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.usd && data.usd > 0) {
+            tasaUSD = data.usd;
+            localStorage.setItem(TASA_KEY, String(tasaUSD));
+            localStorage.setItem(TASA_TIME_KEY, String(Date.now()));
+            renderGrid();
+            syncCart();
+          }
+        })
+        .catch(function() {});
+    }
 
     // precioUSD es el precio fijo en dolares
     // CUP se calcula: precioUSD * tasaUSD (redondeado)
@@ -1204,6 +1226,7 @@
     renderDeliverySummary();
     loadCart();
     syncCart();
+    fetchTasa();
     document.getElementById('y').textContent = new Date().getFullYear();
   </script>
 </body>
