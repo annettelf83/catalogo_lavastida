@@ -486,16 +486,15 @@
     // Auto-actualización: compara version local vs servidor
     // Cuando publiques cambios, sube v.txt con un numero nuevo
     (function(){
-      var LOCAL_V = '14';
-      // Si ya venimos de un reload forzado, no volver a chequear
-      var u = new URL(window.location);
-      if(u.searchParams.get('_r') === LOCAL_V) return;
+      var LOCAL_V = '15';
       fetch('v.txt?' + Date.now(), {cache:'no-store'})
         .then(function(r){ return r.text(); })
         .then(function(t){
-          if(t.trim() !== LOCAL_V){
-            // Redirigir con parametro cache-buster para forzar descarga nueva
-            u.searchParams.set('_r', t.trim());
+          var serverV = t.trim();
+          if(serverV !== LOCAL_V){
+            // Forzar recarga limpia sin cache
+            var u = new URL(window.location);
+            u.searchParams.set('_v', serverV);
             window.location.replace(u.href);
           }
         })
@@ -690,18 +689,14 @@
     let tasaUSD = Number(localStorage.getItem(TASA_KEY)) || TASA_DEFAULT;
     let moneda = localStorage.getItem(MONEDA_KEY) || 'CUP';
 
-    // Consultar tasa de El Toque via Worker (1 vez por hora max)
+    // Consultar tasa de El Toque via Worker
     function fetchTasa() {
-      if (WORKER_URL === 'PENDIENTE') return;
-      var lastFetch = Number(localStorage.getItem(TASA_TIME_KEY)) || 0;
-      if (Date.now() - lastFetch < 3600000) return; // 1 hora
-      fetch(WORKER_URL, { cache: 'no-store' })
+      fetch(WORKER_URL + '?' + Date.now(), { cache: 'no-store' })
         .then(function(r) { return r.json(); })
         .then(function(data) {
-          if (data.usd && data.usd > 0) {
+          if (data.usd && data.usd > 0 && data.usd !== tasaUSD) {
             tasaUSD = data.usd;
             localStorage.setItem(TASA_KEY, String(tasaUSD));
-            localStorage.setItem(TASA_TIME_KEY, String(Date.now()));
             renderGrid();
             syncCart();
           }
