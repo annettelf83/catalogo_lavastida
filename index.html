@@ -486,7 +486,7 @@
     // Auto-actualización: compara version local vs servidor
     // Cuando publiques cambios, sube v.txt con un numero nuevo
     (function(){
-      var LOCAL_V = '15';
+      var LOCAL_V = '16';
       fetch('v.txt?' + Date.now(), {cache:'no-store'})
         .then(function(r){ return r.text(); })
         .then(function(t){
