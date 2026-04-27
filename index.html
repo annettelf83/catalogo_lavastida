@@ -486,7 +486,7 @@
     // Auto-actualización: compara version local vs servidor
     // Cuando publiques cambios, sube v.txt con un numero nuevo
     (function(){
-      var LOCAL_V = '16';
+      var LOCAL_V = '17';
       fetch('v.txt?' + Date.now(), {cache:'no-store'})
         .then(function(r){ return r.text(); })
         .then(function(t){
@@ -685,20 +685,31 @@
     const TASA_TIME_KEY = 'lavastida_tasa_time';
     const MONEDA_KEY = 'lavastida_moneda';
     const WORKER_URL = 'https://tasa-lavastida.alavastida-bank.workers.dev';
-    const TASA_DEFAULT = 516.5;
+    const TASA_DEFAULT = 530;
     let tasaUSD = Number(localStorage.getItem(TASA_KEY)) || TASA_DEFAULT;
     let moneda = localStorage.getItem(MONEDA_KEY) || 'CUP';
+
+    // Si la tasa guardada es muy vieja, resetear a default actual
+    var tasaGuardadaTime = Number(localStorage.getItem(TASA_TIME_KEY)) || 0;
+    if (Date.now() - tasaGuardadaTime > 86400000) {
+      tasaUSD = TASA_DEFAULT;
+      localStorage.removeItem(TASA_KEY);
+      localStorage.removeItem(TASA_TIME_KEY);
+    }
 
     // Consultar tasa de El Toque via Worker
     function fetchTasa() {
       fetch(WORKER_URL + '?' + Date.now(), { cache: 'no-store' })
         .then(function(r) { return r.json(); })
         .then(function(data) {
-          if (data.usd && data.usd > 0 && data.usd !== tasaUSD) {
+          if (data.usd && data.usd > 0) {
             tasaUSD = data.usd;
             localStorage.setItem(TASA_KEY, String(tasaUSD));
-            renderGrid();
-            syncCart();
+            localStorage.setItem(TASA_TIME_KEY, String(Date.now()));
+            if (typeof renderGrid === 'function') {
+              renderGrid();
+              syncCart();
+            }
           }
         })
         .catch(function() {});
@@ -1201,7 +1212,7 @@
     // =====================
     // VERSION — invalida carrito viejo al cambiar precios
     // =====================
-    const VERSION = "2026-04-03";
+    const VERSION = "2026-04-27";
     const VERSION_KEY = "lavastida_version";
     if (localStorage.getItem(VERSION_KEY) !== VERSION) {
       localStorage.removeItem(CART_KEY);
