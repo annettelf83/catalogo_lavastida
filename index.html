@@ -483,22 +483,33 @@
 
   <!-- ===== JAVASCRIPT ===== -->
   <script>
+    // Registrar Service Worker para forzar red primero en HTML y v.txt
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function(){});
+    }
+
     // Auto-actualización: compara version local vs servidor
     // Cuando publiques cambios, sube v.txt con un numero nuevo
     (function(){
-      var LOCAL_V = '18';
-      fetch('v.txt?' + Date.now(), {cache:'no-store'})
-        .then(function(r){ return r.text(); })
-        .then(function(t){
-          var serverV = t.trim();
-          if(serverV !== LOCAL_V){
-            // Forzar recarga limpia sin cache
-            var u = new URL(window.location);
-            u.searchParams.set('_v', serverV);
-            window.location.replace(u.href);
-          }
-        })
-        .catch(function(){});
+      var LOCAL_V = '19';
+      function chequear(){
+        fetch('v.txt?' + Date.now(), {cache:'no-store'})
+          .then(function(r){ return r.text(); })
+          .then(function(t){
+            var serverV = t.trim();
+            if(serverV !== LOCAL_V){
+              var u = new URL(window.location);
+              u.searchParams.set('_v', serverV);
+              window.location.replace(u.href);
+            }
+          })
+          .catch(function(){});
+      }
+      chequear();
+      // Tambien chequear cuando el usuario vuelve a la pestaña/app
+      document.addEventListener('visibilitychange', function(){
+        if (document.visibilityState === 'visible') chequear();
+      });
     })();
   </script>
   <script>
@@ -697,16 +708,20 @@
       localStorage.removeItem(TASA_TIME_KEY);
     }
 
-    // Consultar tasa de El Toque via Worker
-    function fetchTasa() {
+    // Consultar tasa de El Toque via Worker — solo si han pasado >= 24h
+    function fetchTasa(forzar) {
+      var ultima = Number(localStorage.getItem(TASA_TIME_KEY)) || 0;
+      var transcurrido = Date.now() - ultima;
+      if (!forzar && transcurrido < 86400000) return; // 24h
       fetch(WORKER_URL + '?' + Date.now(), { cache: 'no-store' })
         .then(function(r) { return r.json(); })
         .then(function(data) {
           if (data.usd && data.usd > 0) {
+            var cambio = data.usd !== tasaUSD;
             tasaUSD = data.usd;
             localStorage.setItem(TASA_KEY, String(tasaUSD));
             localStorage.setItem(TASA_TIME_KEY, String(Date.now()));
-            if (typeof renderGrid === 'function') {
+            if (cambio && typeof renderGrid === 'function') {
               renderGrid();
               syncCart();
             }
