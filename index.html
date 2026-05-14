@@ -486,7 +486,7 @@
     // Auto-actualización: compara version local vs servidor
     // Cuando publiques cambios, sube v.txt con un numero nuevo
     (function(){
-      var LOCAL_V = '17';
+      var LOCAL_V = '18';
       fetch('v.txt?' + Date.now(), {cache:'no-store'})
         .then(function(r){ return r.text(); })
         .then(function(t){
@@ -1023,9 +1023,10 @@
       </div>`;
 
       const cupTotal = totalCUP();
-      cartTotal.textContent = fmtPrecioCUP(cupTotal);
+      const usdTotal = totalUSD();
+      cartTotal.textContent = moneda === 'USD' ? fmtUSD(usdTotal) : fmtCUPraw(cupTotal);
       const dualEl = document.getElementById('cartTotalDual');
-      if (dualEl) dualEl.textContent = fmtDualCUP(cupTotal);
+      if (dualEl) dualEl.textContent = moneda === 'USD' ? fmtCUPraw(cupTotal) : fmtUSD(usdTotal);
       sendWA.href = buildWhatsAppUrl();
       updateSendWAState();
       saveCart();
@@ -1042,6 +1043,7 @@
       if (cart.size === 0) return "Hola Lavastida, quiero consultar disponibilidad.";
       const entrega = deliveryMode === 'con' ? 'Con mensajeria' : 'Sin mensajeria';
       const cupTotal = totalCUP();
+      const usdTotal = totalUSD();
       const lines = [
         "Hola Lavastida, quiero este pedido:",
         `Cliente: ${deliveryData.name || "No indicado"}`,
@@ -1061,7 +1063,7 @@
         if (deliveryData.zone) lines.push(`- Zona: ${deliveryData.zone}`);
         if (deliveryData.ref) lines.push(`- Referencia: ${deliveryData.ref}`);
       }
-      lines.push("", `Total: ${fmtCUPraw(cupTotal)} (${fmtUSD(cupTotal / tasaUSD)})`);
+      lines.push("", `Total: ${fmtCUPraw(cupTotal)} (${fmtUSD(usdTotal)})`);
       lines.push("", "Espero su confirmacion. Gracias!");
       return lines.join("\n");
     }
