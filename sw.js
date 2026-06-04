@@ -6,8 +6,7 @@
 //      (sitio rapido en internet lento). Se llena al vuelo; se limpia
 //      el cache viejo al activar.
 
-const CACHE = 'lavastida-assets-v20';   // <-- subir el sufijo en cada deploy
-const RATE_WORKER_HOST = 'tasa-lavastida.alavastida-bank.workers.dev';
+const CACHE = 'lavastida-assets-v21';   // <-- subir el sufijo en cada deploy
 const ASSET_RE = /\.(?:jpe?g|png|webp|svg|gif|ico|otf|ttf|woff2?)$/i;
 
 self.addEventListener('install', () => self.skipWaiting());
@@ -25,15 +24,10 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
-  // 1) Worker de tasa: SIEMPRE red, nunca cache (tasa en vivo)
-  if (url.hostname === RATE_WORKER_HOST) {
-    event.respondWith(fetch(req, { cache: 'no-store' }));
-    return;
-  }
-
+  // Cross-origin (incluido el Worker de tasa): no interceptar, lo maneja el navegador.
   if (url.origin !== self.location.origin) return;
 
-  // 2) VOLATIL: navegaciones, HTML, raiz, v.txt, sw.js -> RED PRIMERO (no-store)
+  // VOLATIL: navegaciones, HTML, raiz, v.txt, sw.js -> RED PRIMERO (no-store)
   const esVolatil =
     req.mode === 'navigate' ||
     url.pathname === '/' ||

@@ -490,7 +490,7 @@
     // Auto-actualización: compara version local vs servidor
     // Cuando publiques cambios, sube v.txt con un numero nuevo
     (function(){
-      var LOCAL_V = '20';
+      var LOCAL_V = '21';
       function chequear(){
         fetch('v.txt?' + Date.now(), {cache:'no-store'})
           .then(function(r){ return r.text(); })
@@ -713,22 +713,34 @@
       if (!forzar && transcurrido < 86400000) {
         return Promise.resolve(tasaUSD); // throttle 24h para el render normal
       }
-      return fetch(WORKER_URL + '?' + Date.now(), { cache: 'no-store' })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          if (data && data.usd && data.usd > 0) {
-            var cambio = data.usd !== tasaUSD;
-            tasaUSD = data.usd;
-            localStorage.setItem(TASA_KEY, String(tasaUSD));
-            localStorage.setItem(TASA_TIME_KEY, String(Date.now()));
-            if (cambio && typeof renderGrid === 'function') {
-              renderGrid();
-              syncCart();
+      // Reintenta si El Toque limita (429 -> el Worker da 502 sin usd) o falla la red.
+      // Nunca rechaza: resuelve con la ultima tasa conocida.
+      function intento(n) {
+        return fetch(WORKER_URL + '?' + Date.now(), { cache: 'no-store' })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data && data.usd && data.usd > 0) {
+              var cambio = data.usd !== tasaUSD;
+              tasaUSD = data.usd;
+              localStorage.setItem(TASA_KEY, String(tasaUSD));
+              localStorage.setItem(TASA_TIME_KEY, String(Date.now()));
+              if (cambio && typeof renderGrid === 'function') {
+                renderGrid();
+                syncCart();
+              }
+              return tasaUSD;
             }
-          }
-          return tasaUSD;
-        })
-        .catch(function() { return tasaUSD; }); // red caida: seguir con la ultima tasa
+            // Sin tasa usable (p.ej. 429): reintentar tras una pausa
+            if (n > 0) return esperar(1500).then(function() { return intento(n - 1); });
+            return tasaUSD;
+          })
+          .catch(function() {
+            if (n > 0) return esperar(1500).then(function() { return intento(n - 1); });
+            return tasaUSD; // red caida sin mas reintentos: seguir con la ultima tasa
+          });
+      }
+      function esperar(ms) { return new Promise(function(res) { setTimeout(res, ms); }); }
+      return intento(2); // hasta 3 intentos en total
     }
 
     // hayTasa(): true solo si tenemos una tasa real (>0). Si no, el CUP se muestra '…'.
@@ -1071,8 +1083,13 @@
         ""
       ];
       cart.forEach(item => {
-        const itemCUP = toCUP(item.precio) * item.qty;
-        lines.push(`- ${item.nombre} x ${item.qty} -- ${fmtUSD(item.precio)} (${fmtCUPraw(toCUP(item.precio))} c/u = ${fmtCUPraw(itemCUP)})`);
+        if (hayTasa()) {
+          const itemCUP = toCUP(item.precio) * item.qty;
+          lines.push(`- ${item.nombre} x ${item.qty} -- ${fmtUSD(item.precio)} (${fmtCUPraw(toCUP(item.precio))} c/u = ${fmtCUPraw(itemCUP)})`);
+        } else {
+          // Sin tasa disponible: USD exacto (nunca '…' en un pedido real)
+          lines.push(`- ${item.nombre} x ${item.qty} -- ${fmtUSD(item.precio)} c/u = ${fmtUSD(item.precio * item.qty)}`);
+        }
       });
       if (deliveryMode === 'con') {
         lines.push("", "Datos de entrega:");
@@ -1082,7 +1099,11 @@
         if (deliveryData.zone) lines.push(`- Zona: ${deliveryData.zone}`);
         if (deliveryData.ref) lines.push(`- Referencia: ${deliveryData.ref}`);
       }
-      lines.push("", `Total: ${fmtCUPraw(cupTotal)} (${fmtUSD(usdTotal)})`);
+      if (hayTasa()) {
+        lines.push("", `Total: ${fmtCUPraw(cupTotal)} (${fmtUSD(usdTotal)})`);
+      } else {
+        lines.push("", `Total: ${fmtUSD(usdTotal)} (tasa CUP no disponible; confirmar al cambio del dia)`);
+      }
       lines.push("", "Espero su confirmacion. Gracias!");
       return lines.join("\n");
     }
@@ -1219,15 +1240,12 @@
         openDeliveryModalFn();
         return;
       }
-      // Datos validos: refrescar la tasa ANTES de construir el mensaje.
-      e.preventDefault();
-      const win = window.open('', '_blank'); // pestaña en blanco bajo gesto del usuario
-      Promise.resolve(fetchTasa(true)).then(function() {
-        syncCart();                     // rearma sendWA.href con la tasa nueva
-        const url = buildWhatsAppUrl();
-        if (win && !win.closed) win.location.href = url;
-        else window.location.href = url; // respaldo si el navegador bloqueo el popup
-      });
+      // Datos validos: asegurar que el enlace tenga el carrito y la tasa actuales,
+      // y dejar que el ancla navegue de forma NATIVA (lo mas confiable en movil).
+      // NO abrimos pestaña en blanco ni esperamos la red: el pedido sale al instante
+      // con la ultima tasa real (que se mantiene fresca al cargar y al volver al sitio).
+      syncCart();        // reconstruye sendWA.href = buildWhatsAppUrl() con la tasa actual
+      fetchTasa(true);   // refresca la tasa en segundo plano para la proxima vez (no bloquea)
     });
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
