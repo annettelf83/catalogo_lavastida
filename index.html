@@ -3,9 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
+  <!-- El control de cache real lo hace el Service Worker (sw.js) + el chequeo de version (v.txt).
+       Las meta http-equiv de cache no funcionan para el documento y se quitaron. -->
   <title>Lavastida · Micropanaderia Artesanal</title>
 
   <style>
@@ -491,7 +490,7 @@
     // Auto-actualización: compara version local vs servidor
     // Cuando publiques cambios, sube v.txt con un numero nuevo
     (function(){
-      var LOCAL_V = '19';
+      var LOCAL_V = '20';
       function chequear(){
         fetch('v.txt?' + Date.now(), {cache:'no-store'})
           .then(function(r){ return r.text(); })
@@ -508,7 +507,10 @@
       chequear();
       // Tambien chequear cuando el usuario vuelve a la pestaña/app
       document.addEventListener('visibilitychange', function(){
-        if (document.visibilityState === 'visible') chequear();
+        if (document.visibilityState === 'visible') {
+          chequear();
+          if (typeof fetchTasa === 'function') fetchTasa(true); // refrescar tasa en vivo
+        }
       });
     })();
   </script>
@@ -696,27 +698,25 @@
     const TASA_TIME_KEY = 'lavastida_tasa_time';
     const MONEDA_KEY = 'lavastida_moneda';
     const WORKER_URL = 'https://tasa-lavastida.alavastida-bank.workers.dev';
-    const TASA_DEFAULT = 530;
-    let tasaUSD = Number(localStorage.getItem(TASA_KEY)) || TASA_DEFAULT;
+    // SIN default inventado: la tasa siempre es real (Worker en vivo, o la ultima real guardada).
+    // La tasa cambia constantemente, asi que un numero fijo siempre estaria mal.
+    // 0 = aun no hay tasa conocida (cliente nuevo); el CUP se muestra como '…' hasta que llegue.
+    let tasaUSD = Number(localStorage.getItem(TASA_KEY)) || 0;
     let moneda = localStorage.getItem(MONEDA_KEY) || 'CUP';
 
-    // Si la tasa guardada es muy vieja, resetear a default actual
-    var tasaGuardadaTime = Number(localStorage.getItem(TASA_TIME_KEY)) || 0;
-    if (Date.now() - tasaGuardadaTime > 86400000) {
-      tasaUSD = TASA_DEFAULT;
-      localStorage.removeItem(TASA_KEY);
-      localStorage.removeItem(TASA_TIME_KEY);
-    }
-
-    // Consultar tasa de El Toque via Worker — solo si han pasado >= 24h
+    // Consultar tasa de El Toque via Worker.
+    // forzar=true ignora el throttle de 24h (para usar al enviar el pedido).
+    // Devuelve una Promesa con la tasa vigente (nunca rechaza).
     function fetchTasa(forzar) {
       var ultima = Number(localStorage.getItem(TASA_TIME_KEY)) || 0;
       var transcurrido = Date.now() - ultima;
-      if (!forzar && transcurrido < 86400000) return; // 24h
-      fetch(WORKER_URL + '?' + Date.now(), { cache: 'no-store' })
+      if (!forzar && transcurrido < 86400000) {
+        return Promise.resolve(tasaUSD); // throttle 24h para el render normal
+      }
+      return fetch(WORKER_URL + '?' + Date.now(), { cache: 'no-store' })
         .then(function(r) { return r.json(); })
         .then(function(data) {
-          if (data.usd && data.usd > 0) {
+          if (data && data.usd && data.usd > 0) {
             var cambio = data.usd !== tasaUSD;
             tasaUSD = data.usd;
             localStorage.setItem(TASA_KEY, String(tasaUSD));
@@ -726,10 +726,13 @@
               syncCart();
             }
           }
+          return tasaUSD;
         })
-        .catch(function() {});
+        .catch(function() { return tasaUSD; }); // red caida: seguir con la ultima tasa
     }
 
+    // hayTasa(): true solo si tenemos una tasa real (>0). Si no, el CUP se muestra '…'.
+    function hayTasa() { return tasaUSD > 0; }
     // precioUSD es el precio fijo en dolares
     // CUP se calcula: precioUSD * tasaUSD (redondeado)
     function toCUP(precioUSD) {
@@ -739,6 +742,7 @@
       return '$' + precioUSD.toFixed(2) + ' USD';
     }
     function fmtCUPraw(cup) {
+      if (!hayTasa()) return 'CUP …';
       return 'CUP ' + cup.toLocaleString('es-ES');
     }
     function fmtCUP(precioUSD) {
@@ -748,13 +752,13 @@
       return moneda === 'USD' ? fmtUSD(precioUSD) : fmtCUP(precioUSD);
     }
     function fmtPrecioCUP(cup) {
-      return moneda === 'USD' ? fmtUSD(cup / tasaUSD) : fmtCUPraw(cup);
+      return moneda === 'USD' ? fmtUSD(hayTasa() ? cup / tasaUSD : 0) : fmtCUPraw(cup);
     }
     function fmtDual(precioUSD) {
       return moneda === 'USD' ? fmtCUP(precioUSD) : fmtUSD(precioUSD);
     }
     function fmtDualCUP(cup) {
-      return moneda === 'USD' ? fmtCUPraw(cup) : fmtUSD(cup / tasaUSD);
+      return moneda === 'USD' ? fmtCUPraw(cup) : fmtUSD(hayTasa() ? cup / tasaUSD : 0);
     }
 
     // =====================
@@ -1207,12 +1211,23 @@
     });
     sendWA.addEventListener('click', (e) => {
       const v = getDeliveryValidation();
-      if (v.ok) return;
+      if (!v.ok) {
+        e.preventDefault();
+        alert(deliveryMode === 'con'
+          ? 'Para enviar pedido con mensajeria, complete: nombre, telefono y direccion.'
+          : 'Para enviar pedido sin mensajeria, complete: nombre y telefono.');
+        openDeliveryModalFn();
+        return;
+      }
+      // Datos validos: refrescar la tasa ANTES de construir el mensaje.
       e.preventDefault();
-      alert(deliveryMode === 'con'
-        ? 'Para enviar pedido con mensajeria, complete: nombre, telefono y direccion.'
-        : 'Para enviar pedido sin mensajeria, complete: nombre y telefono.');
-      openDeliveryModalFn();
+      const win = window.open('', '_blank'); // pestaña en blanco bajo gesto del usuario
+      Promise.resolve(fetchTasa(true)).then(function() {
+        syncCart();                     // rearma sendWA.href con la tasa nueva
+        const url = buildWhatsAppUrl();
+        if (win && !win.closed) win.location.href = url;
+        else window.location.href = url; // respaldo si el navegador bloqueo el popup
+      });
     });
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
@@ -1249,7 +1264,7 @@
     renderDeliverySummary();
     loadCart();
     syncCart();
-    fetchTasa();
+    fetchTasa(true); // primera carga: tasa en vivo, no quedarse en el default
     document.getElementById('y').textContent = new Date().getFullYear();
   </script>
 </body>
