@@ -490,7 +490,7 @@
     // Auto-actualización: compara version local vs servidor
     // Cuando publiques cambios, sube v.txt con un numero nuevo
     (function(){
-      var LOCAL_V = '21';
+      var LOCAL_V = '22';
       function chequear(){
         fetch('v.txt?' + Date.now(), {cache:'no-store'})
           .then(function(r){ return r.text(); })
@@ -698,10 +698,13 @@
     const TASA_TIME_KEY = 'lavastida_tasa_time';
     const MONEDA_KEY = 'lavastida_moneda';
     const WORKER_URL = 'https://tasa-lavastida.alavastida-bank.workers.dev';
-    // SIN default inventado: la tasa siempre es real (Worker en vivo, o la ultima real guardada).
-    // La tasa cambia constantemente, asi que un numero fijo siempre estaria mal.
-    // 0 = aun no hay tasa conocida (cliente nuevo); el CUP se muestra como '…' hasta que llegue.
-    let tasaUSD = Number(localStorage.getItem(TASA_KEY)) || 0;
+    // Tasa SEMILLA: ultima tasa real conocida al momento del deploy. Solo se usa como
+    // respaldo para un cliente NUEVO cuya consulta en vivo aun no respondio; la consulta
+    // (fetchTasa) la reemplaza enseguida, y un cliente que regresa usa la suya guardada.
+    // Asi el pedido SIEMPRE lleva un precio en CUP real. Actualizar cuando la tasa cambie
+    // bastante (hoy ~610). NO es el viejo 530 fijo: es la tasa real vigente.
+    const TASA_SEED = 610;
+    let tasaUSD = Number(localStorage.getItem(TASA_KEY)) || TASA_SEED;
     let moneda = localStorage.getItem(MONEDA_KEY) || 'CUP';
 
     // Consultar tasa de El Toque via Worker.
@@ -743,10 +746,9 @@
       return intento(2); // hasta 3 intentos en total
     }
 
-    // hayTasa(): true solo si tenemos una tasa real (>0). Si no, el CUP se muestra '…'.
-    function hayTasa() { return tasaUSD > 0; }
     // precioUSD es el precio fijo en dolares
-    // CUP se calcula: precioUSD * tasaUSD (redondeado)
+    // CUP se calcula: precioUSD * tasaUSD (redondeado). tasaUSD siempre es real (>0)
+    // gracias a TASA_SEED, asi que el CUP siempre se muestra.
     function toCUP(precioUSD) {
       return Math.round(precioUSD * tasaUSD);
     }
@@ -754,7 +756,6 @@
       return '$' + precioUSD.toFixed(2) + ' USD';
     }
     function fmtCUPraw(cup) {
-      if (!hayTasa()) return 'CUP …';
       return 'CUP ' + cup.toLocaleString('es-ES');
     }
     function fmtCUP(precioUSD) {
@@ -764,13 +765,13 @@
       return moneda === 'USD' ? fmtUSD(precioUSD) : fmtCUP(precioUSD);
     }
     function fmtPrecioCUP(cup) {
-      return moneda === 'USD' ? fmtUSD(hayTasa() ? cup / tasaUSD : 0) : fmtCUPraw(cup);
+      return moneda === 'USD' ? fmtUSD(cup / tasaUSD) : fmtCUPraw(cup);
     }
     function fmtDual(precioUSD) {
       return moneda === 'USD' ? fmtCUP(precioUSD) : fmtUSD(precioUSD);
     }
     function fmtDualCUP(cup) {
-      return moneda === 'USD' ? fmtCUPraw(cup) : fmtUSD(hayTasa() ? cup / tasaUSD : 0);
+      return moneda === 'USD' ? fmtCUPraw(cup) : fmtUSD(cup / tasaUSD);
     }
 
     // =====================
@@ -1083,13 +1084,8 @@
         ""
       ];
       cart.forEach(item => {
-        if (hayTasa()) {
-          const itemCUP = toCUP(item.precio) * item.qty;
-          lines.push(`- ${item.nombre} x ${item.qty} -- ${fmtUSD(item.precio)} (${fmtCUPraw(toCUP(item.precio))} c/u = ${fmtCUPraw(itemCUP)})`);
-        } else {
-          // Sin tasa disponible: USD exacto (nunca '…' en un pedido real)
-          lines.push(`- ${item.nombre} x ${item.qty} -- ${fmtUSD(item.precio)} c/u = ${fmtUSD(item.precio * item.qty)}`);
-        }
+        const itemCUP = toCUP(item.precio) * item.qty;
+        lines.push(`- ${item.nombre} x ${item.qty} -- ${fmtUSD(item.precio)} (${fmtCUPraw(toCUP(item.precio))} c/u = ${fmtCUPraw(itemCUP)})`);
       });
       if (deliveryMode === 'con') {
         lines.push("", "Datos de entrega:");
@@ -1099,11 +1095,7 @@
         if (deliveryData.zone) lines.push(`- Zona: ${deliveryData.zone}`);
         if (deliveryData.ref) lines.push(`- Referencia: ${deliveryData.ref}`);
       }
-      if (hayTasa()) {
-        lines.push("", `Total: ${fmtCUPraw(cupTotal)} (${fmtUSD(usdTotal)})`);
-      } else {
-        lines.push("", `Total: ${fmtUSD(usdTotal)} (tasa CUP no disponible; confirmar al cambio del dia)`);
-      }
+      lines.push("", `Total: ${fmtCUPraw(cupTotal)} (${fmtUSD(usdTotal)})`);
       lines.push("", "Espero su confirmacion. Gracias!");
       return lines.join("\n");
     }

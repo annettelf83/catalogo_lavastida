@@ -6,7 +6,7 @@
 //      (sitio rapido en internet lento). Se llena al vuelo; se limpia
 //      el cache viejo al activar.
 
-const CACHE = 'lavastida-assets-v21';   // <-- subir el sufijo en cada deploy
+const CACHE = 'lavastida-assets-v22';   // <-- subir el sufijo en cada deploy
 const ASSET_RE = /\.(?:jpe?g|png|webp|svg|gif|ico|otf|ttf|woff2?)$/i;
 
 self.addEventListener('install', () => self.skipWaiting());
